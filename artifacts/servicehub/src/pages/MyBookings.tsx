@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { useListBookings, useUpdateBookingStatus, getListBookingsQueryKey } from "@workspace/api-client-react";
+import {
+  useListBookings,
+  useUpdateBookingStatus,
+  useCreateReview,
+  getListBookingsQueryKey,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -7,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,9 +23,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarCheck, MapPin, Clock, Wrench, XCircle } from "lucide-react";
+import { CalendarCheck, MapPin, Clock, Wrench, XCircle, Star, MessageSquarePlus } from "lucide-react";
 import { Link } from "wouter";
+import type { Booking } from "@workspace/api-client-react";
 
 const statusColor: Record<string, string> = {
   pending:   "bg-yellow-50 text-yellow-700 border-yellow-200",
@@ -28,12 +42,43 @@ const statusColor: Record<string, string> = {
   cancelled: "bg-red-50 text-red-700 border-red-200",
 };
 
+function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          onMouseEnter={() => setHovered(n)}
+          onMouseLeave={() => setHovered(0)}
+          className="focus:outline-none"
+        >
+          <Star
+            className={`h-8 w-8 transition-colors ${
+              n <= (hovered || value)
+                ? "fill-amber-400 text-amber-400"
+                : "text-slate-300"
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function MyBookings() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: bookings, isLoading } = useListBookings();
   const cancelMutation = useUpdateBookingStatus();
+  const reviewMutation = useCreateReview();
+
   const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
+  const [stars, setStars] = useState(5);
+  const [feedback, setFeedback] = useState("");
 
   const user = (() => {
     try { return JSON.parse(localStorage.getItem("user") ?? "null"); } catch { return null; }
@@ -57,7 +102,39 @@ export default function MyBookings() {
     );
   };
 
+  const openReview = (booking: Booking) => {
+    setReviewBooking(booking);
+    setStars(5);
+    setFeedback("");
+  };
+
+  const handleSubmitReview = () => {
+    if (!reviewBooking) return;
+    reviewMutation.mutate(
+      {
+        data: {
+          bookingId: reviewBooking.id,
+          providerId: reviewBooking.providerId,
+          userId: reviewBooking.userId,
+          stars,
+          feedback,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast({ title: "Review submitted!", description: "Thank you for your feedback." });
+          setReviewBooking(null);
+        },
+        onError: () => {
+          toast({ title: "Failed to submit review", description: "Please try again.", variant: "destructive" });
+        },
+      }
+    );
+  };
+
   const cancellable = (status: string) => status === "pending" || status === "confirmed";
+
+  const starLabel = ["", "Poor", "Fair", "Good", "Great", "Excellent"][stars] ?? "";
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -101,24 +178,16 @@ export default function MyBookings() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-slate-900 text-lg">
-                            Booking #{booking.id}
+                            {booking.providerName ?? `Booking #${booking.id}`}
                           </h3>
-                          <p className="text-slate-500 text-sm mt-0.5 line-clamp-2">
+                          <p className="text-slate-500 text-sm capitalize">{booking.serviceType.replace("_", " ")}</p>
+                          <p className="text-slate-500 text-sm mt-1 line-clamp-2">
                             {booking.description ?? "No description provided"}
                           </p>
                           <div className="flex flex-wrap gap-4 mt-3 text-sm text-slate-500">
                             <span className="flex items-center gap-1">
                               <Clock className="h-4 w-4" />
-                              {booking.scheduledAt
-                                ? new Date(booking.scheduledAt).toLocaleString("en-IN", {
-                                    dateStyle: "medium",
-                                    timeStyle: "short",
-                                  })
-                                : "Time TBD"}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              {booking.address ?? "Address TBD"}
+                              {booking.date} {booking.timeSlot && `· ${booking.timeSlot}`}
                             </span>
                           </div>
                         </div>
@@ -131,10 +200,8 @@ export default function MyBookings() {
                         >
                           {booking.status}
                         </Badge>
-                        {booking.totalAmount && (
-                          <span className="text-lg font-bold text-slate-900">
-                            ₹{booking.totalAmount}
-                          </span>
+                        {booking.amount && (
+                          <span className="text-lg font-bold text-slate-900">₹{booking.amount}</span>
                         )}
                         {cancellable(booking.status) && (
                           <Button
@@ -145,6 +212,17 @@ export default function MyBookings() {
                           >
                             <XCircle className="h-4 w-4" />
                             Cancel Booking
+                          </Button>
+                        )}
+                        {booking.status === "completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-amber-600 border-amber-200 hover:bg-amber-50 hover:text-amber-700 gap-1.5"
+                            onClick={() => openReview(booking)}
+                          >
+                            <Star className="h-4 w-4" />
+                            Leave a Review
                           </Button>
                         )}
                       </div>
@@ -158,6 +236,7 @@ export default function MyBookings() {
       </main>
       <Footer />
 
+      {/* Cancel confirmation dialog */}
       <AlertDialog open={confirmId !== null} onOpenChange={(open) => { if (!open) setConfirmId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -178,6 +257,51 @@ export default function MyBookings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Review dialog */}
+      <Dialog open={reviewBooking !== null} onOpenChange={(open) => { if (!open) setReviewBooking(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquarePlus className="h-5 w-5 text-primary" />
+              Rate your experience
+            </DialogTitle>
+            <DialogDescription>
+              How was your service with <strong>{reviewBooking?.providerName ?? `Provider #${reviewBooking?.providerId}`}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 pt-2">
+            <div className="flex flex-col items-center gap-2">
+              <StarRating value={stars} onChange={setStars} />
+              <span className="text-sm font-medium text-slate-600">{starLabel}</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700">Your feedback</label>
+              <Textarea
+                placeholder="Tell us what went well or what could be improved…"
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                rows={4}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <Button variant="outline" className="flex-1" onClick={() => setReviewBooking(null)}>
+                Skip
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={!feedback.trim() || reviewMutation.isPending}
+                onClick={handleSubmitReview}
+              >
+                {reviewMutation.isPending ? "Submitting…" : "Submit Review"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
