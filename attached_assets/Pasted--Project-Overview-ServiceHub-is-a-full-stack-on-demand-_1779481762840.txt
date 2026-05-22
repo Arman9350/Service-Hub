@@ -1,0 +1,171 @@
+ Project Overview
+ServiceHub is a full-stack on-demand service marketplace connecting users with nearby local service providers. The platform enables search, booking, payment, real-time notifications, and provider-user chat.
+
+Project Title	ServiceHub — Smart Local Service Provider Platform
+Type	Web Application (Full Stack)
+Target Users	General public + Local service providers
+Service Types	Electricians, Plumbers, Carpenters, AC Repair, Tutors, Mechanics, Beauticians, Delivery Helpers, Freelancers
+Tech Stack	React.js, Node.js, MongoDB, Socket.io, Firebase, Google Maps / OpenStreetMap
+Comparable Apps	Urban Company, TaskRabbit, Thumbtack, Justdial, Dunzo
+
+
+2. All Three Modules — Complete Feature List
+User Module
+•	Registration & login (email/phone + password)
+•	Search nearby service providers by category
+•	Filter by rating, distance, price, and availability
+•	View provider profile with photo, bio, and reviews
+•	Book a service (select date, time slot, service type)
+•	Make payments (Razorpay / Stripe sandbox)
+•	Track booking status (pending → confirmed → completed)
+•	Chat with service provider in real time
+•	Receive real-time notifications (booking alerts, status updates)
+•	Submit ratings and reviews after service completion
+
+Service Provider Module
+•	Register and create a detailed service profile
+•	Add services offered with pricing
+•	Toggle availability status (online / offline)
+•	Accept or reject incoming booking requests
+•	View booking history and upcoming appointments
+•	Track earnings — daily, weekly, monthly breakdown
+•	Chat with users regarding bookings
+•	Receive real-time notifications for new bookings
+•	View and respond to customer reviews
+
+Admin Module
+•	View all users and manage accounts
+•	Verify and approve new service providers
+•	Monitor all bookings with status tracking
+•	Analytics dashboard — total users, revenue, bookings
+•	Bar/line charts for booking trends and performance
+•	Manage reported issues or disputes
+•	Send platform-wide notifications
+
+
+3. Build Plan
+
+
+•	Create mockData.js — 15 fake providers covering all 9 service types (including Delivery Helpers & Freelancers)
+
+Step 1 — Landing Page
+•	Hero section with search bar and city selector
+•	Service category icons: Electrician, Plumber, Carpenter, AC Repair, Tutor, Mechanic, Beautician, Delivery, Freelancer
+•	Navbar with logo, Login button, and Register link
+•	Footer with project name, college, and team names
+•	'Find Near Me' button (mock location — shows Delhi/Mumbai)
+
+Step 2 — Provider Listing Page
+•	Grid of provider cards from mock data
+•	Each card: name, category, rating stars, distance, price/hr, availability badge
+•	Filter bar: by service type, min rating, max price
+•	Sort by: rating, distance, price
+•	Click card → navigate to provider profile
+Step 3 — Provider Profile & Booking
+•	Provider detail: photo, name, bio, services list, price
+•	'Book Now' button opens a booking form
+•	Booking form: date, time slot, service description, your name & phone
+•	On submit: show confirmation screen with booking ID
+•	Below profile: 4–5 fake reviews with star ratings and text
+
+Step 4 — Login, Register & Chat UI
+•	Login page: email + password + submit
+•	Register page: name, email, phone, password + 'I am a Service Provider' toggle
+•	Chat UI page: message bubbles (static mock), provider name at top
+•	Chat shows: user messages on right (blue), provider on left (gray)
+•	No real socket needed — just static UI for demo
+
+Step 5 — Admin Dashboard
+•	4 stat cards: Total Users, Total Providers, Bookings Today, Total Revenue
+•	Recent bookings table with columns: ID, User, Provider, Service, Status
+•	Status badges: Pending (yellow), Confirmed (blue), Completed (green)
+•	Bar chart of bookings per day using Chart.js (CDN, no install)
+•	Sidebar: Dashboard, Users, Providers, Bookings, Analytics links
+
+Step 6 — Notifications & Earnings Mock UI
+•	Notification bell icon in navbar — click shows a dropdown of 3–4 mock alerts
+•	Mock alerts: 'Your booking is confirmed', 'New booking request', 'Review received'
+•	Provider Earnings page: cards showing Today's Earnings, This Week, This Month
+•	Simple earnings table: date, service, user, amount, status
+•	Live Tracking page (static): show a map iframe with a mock 'Provider is 2km away' message
+
+Step 7 — Polish, Connect & Submit
+•	Connect all pages with React Router (no broken links)
+•	Test full flow: Home → Search → Book → Confirm → Chat → Notifications
+•	Add responsive styles — test on mobile screen size in browser devtools
+•	Take screenshots of every page for project report
+•	Write README.md and zip the project folder for submission
+
+
+4. All Pages — Priority Order
+Build in this order. Stop when time runs out — even 5 pages is submittable.
+
+Priority	Page	Key Elements
+1 — Must	Home / Landing Page	Search bar, 9 service categories, navbar, footer
+2 — Must	Provider Listing	Cards, filters, sort, ratings, distance badges
+3 — Must	Provider Profile	Bio, services, reviews, Book Now button
+4 — Must	Booking Confirmation	Form + success screen with booking ID
+5 — Must	Login / Register	Email, password, provider toggle
+6 — Should	Admin Dashboard	Stat cards, bookings table, bar chart
+7 — Should	Chat UI	Static message bubbles, provider header
+8 — Should	Notifications	Bell dropdown with 3–4 mock alerts
+9 — Nice to have	Earnings & Live Tracking	Mock earnings cards, static map iframe
+
+
+5. Complete Technology Stack
+Layer	Technology / Tool
+Frontend	React.js + Tailwind CSS (web), optional React Native (mobile)
+Backend	Node.js + Express.js (REST APIs)
+Database	MongoDB with Mongoose ODM
+Real-time (Chat + Notifications)	Socket.io + Firebase Cloud Messaging (FCM)
+Maps & Location	OpenStreetMap + Leaflet.js (free) or Google Maps API
+Authentication	JWT (JSON Web Tokens) + bcrypt for passwords
+Payment Gateway	Razorpay test mode (India) or Stripe sandbox
+Deployment (optional)	Vercel (frontend) + Railway or Render (backend)
+
+
+6. Database Schema — All 4 Tables
+Table: Users
+•	user_id (PK)
+•	name
+•	email
+•	phone
+•	password_hash
+•	location { lat, lng }
+•	role (user / provider / admin)
+•	created_at
+
+Table: Service Providers
+•	provider_id (PK)
+•	user_id (FK)
+•	service_type
+•	description
+•	skills[]
+•	rating (avg)
+•	total_reviews
+•	availability (boolean)
+•	location { lat, lng }
+•	price_per_hour
+•	earnings_total
+•	created_at
+
+Table: Bookings
+•	booking_id (PK)
+•	user_id (FK)
+•	provider_id (FK)
+•	service_type
+•	description
+•	date
+•	time_slot
+•	status (pending / confirmed / completed / cancelled)
+•	amount
+•	created_at
+
+Table: Reviews
+•	review_id (PK)
+•	booking_id (FK)
+•	user_id (FK)
+•	provider_id (FK)
+•	stars (1–5)
+•	feedback
+•	created_at

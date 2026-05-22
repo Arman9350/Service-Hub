@@ -3,13 +3,24 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: ServiceHub API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: providers
+    description: Service provider operations
+  - name: bookings
+    description: Booking operations
+  - name: reviews
+    description: Review operations
+  - name: users
+    description: User operations
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
@@ -24,6 +35,426 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /providers:
+    get:
+      operationId: listProviders
+      tags: [providers]
+      summary: List service providers
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: minRating
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: available
+          in: query
+          schema:
+            type: boolean
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [rating, distance, price]
+      responses:
+        "200":
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+
+  /providers/{id}:
+    get:
+      operationId: getProvider
+      tags: [providers]
+      summary: Get provider by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Provider details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+        "404":
+          description: Provider not found
+
+  /providers/{id}/availability:
+    patch:
+      operationId: updateProviderAvailability
+      tags: [providers]
+      summary: Toggle provider availability
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AvailabilityUpdate"
+      responses:
+        "200":
+          description: Updated provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: providerId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, completed, cancelled]
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Created booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "404":
+          description: Booking not found
+
+  /bookings/{id}/status:
+    patch:
+      operationId: updateBookingStatus
+      tags: [bookings]
+      summary: Update booking status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingStatusUpdate"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /reviews:
+    get:
+      operationId: listReviews
+      tags: [reviews]
+      summary: List reviews
+      parameters:
+        - name: providerId
+          in: query
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Submit a review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Created review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  /users:
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/login:
+    post:
+      operationId: loginUser
+      tags: [users]
+      summary: Login a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "401":
+          description: Invalid credentials
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get platform-wide statistics
+      responses:
+        "200":
+          description: Admin statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/bookings:
+    get:
+      operationId: listAllBookings
+      tags: [admin]
+      summary: List all bookings for admin view
+      responses:
+        "200":
+          description: All bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
+  /admin/users:
+    get:
+      operationId: listAllUsers
+      tags: [admin]
+      summary: List all users
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /admin/providers:
+    get:
+      operationId: listAllProviders
+      tags: [admin]
+      summary: List all providers for admin
+      responses:
+        "200":
+          description: All providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+
+  /admin/providers/{id}/verify:
+    patch:
+      operationId: verifyProvider
+      tags: [admin]
+      summary: Verify/approve a service provider
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyProviderInput"
+      responses:
+        "200":
+          description: Updated provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [users]
+      summary: Get notifications for current session user
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notifications list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /earnings:
+    get:
+      operationId: getEarnings
+      tags: [providers]
+      summary: Get earnings breakdown for a provider
+      parameters:
+        - name: providerId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Earnings breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EarningsSummary"
+
+  /messages:
+    get:
+      operationId: listMessages
+      tags: [users]
+      summary: Get chat messages between user and provider
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: providerId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+    post:
+      operationId: sendMessage
+      tags: [users]
+      summary: Send a chat message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +465,323 @@ components:
       required:
         - status
 
+    User:
+      type: object
+      required: [id, name, email, phone, role, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [user, provider, admin]
+        createdAt:
+          type: string
+          format: date-time
+
+    UserInput:
+      type: object
+      required: [name, email, phone, password, role]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [user, provider]
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    LoginResult:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    Provider:
+      type: object
+      required: [id, userId, name, serviceType, description, rating, totalReviews, available, pricePerHour, city, verified, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        photo:
+          type: ["string", "null"]
+        serviceType:
+          type: string
+          enum: [electrician, plumber, carpenter, ac_repair, tutor, mechanic, beautician, delivery, freelancer]
+        description:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+        totalReviews:
+          type: integer
+        available:
+          type: boolean
+        city:
+          type: string
+        distanceKm:
+          type: ["number", "null"]
+        pricePerHour:
+          type: number
+        earningsTotal:
+          type: ["number", "null"]
+        verified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    AvailabilityUpdate:
+      type: object
+      required: [available]
+      properties:
+        available:
+          type: boolean
+
+    VerifyProviderInput:
+      type: object
+      required: [verified]
+      properties:
+        verified:
+          type: boolean
+
+    Booking:
+      type: object
+      required: [id, userId, providerId, serviceType, description, date, timeSlot, status, amount, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        providerId:
+          type: integer
+        userName:
+          type: ["string", "null"]
+        userPhone:
+          type: ["string", "null"]
+        providerName:
+          type: ["string", "null"]
+        serviceType:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+        timeSlot:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+        amount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    BookingInput:
+      type: object
+      required: [userId, providerId, serviceType, description, date, timeSlot, amount, userName, userPhone]
+      properties:
+        userId:
+          type: integer
+        providerId:
+          type: integer
+        serviceType:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+        timeSlot:
+          type: string
+        amount:
+          type: number
+        userName:
+          type: string
+        userPhone:
+          type: string
+
+    BookingStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, confirmed, completed, cancelled]
+
+    Review:
+      type: object
+      required: [id, providerId, userId, stars, feedback, createdAt]
+      properties:
+        id:
+          type: integer
+        bookingId:
+          type: ["integer", "null"]
+        providerId:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: ["string", "null"]
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+        feedback:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ReviewInput:
+      type: object
+      required: [providerId, userId, stars, feedback]
+      properties:
+        bookingId:
+          type: integer
+        providerId:
+          type: integer
+        userId:
+          type: integer
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+        feedback:
+          type: string
+
+    AdminStats:
+      type: object
+      required: [totalUsers, totalProviders, totalBookings, bookingsToday, totalRevenue, bookingsByDay]
+      properties:
+        totalUsers:
+          type: integer
+        totalProviders:
+          type: integer
+        totalBookings:
+          type: integer
+        bookingsToday:
+          type: integer
+        totalRevenue:
+          type: number
+        bookingsByDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/DayCount"
+
+    DayCount:
+      type: object
+      required: [date, count]
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+
+    Notification:
+      type: object
+      required: [id, userId, message, type, read, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        message:
+          type: string
+        type:
+          type: string
+          enum: [booking_confirmed, booking_request, review_received, booking_completed]
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    EarningsSummary:
+      type: object
+      required: [today, thisWeek, thisMonth, total, breakdown]
+      properties:
+        today:
+          type: number
+        thisWeek:
+          type: number
+        thisMonth:
+          type: number
+        total:
+          type: number
+        breakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/EarningEntry"
+
+    EarningEntry:
+      type: object
+      required: [date, service, userName, amount, status]
+      properties:
+        date:
+          type: string
+        service:
+          type: string
+        userName:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+
+    Message:
+      type: object
+      required: [id, senderId, receiverId, content, createdAt]
+      properties:
+        id:
+          type: integer
+        senderId:
+          type: integer
+        receiverId:
+          type: integer
+        senderName:
+          type: ["string", "null"]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    MessageInput:
+      type: object
+      required: [senderId, receiverId, content]
+      properties:
+        senderId:
+          type: integer
+        receiverId:
+          type: integer
+        content:
+          type: string
