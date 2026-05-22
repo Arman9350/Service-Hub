@@ -14,8 +14,11 @@ export default function Register() {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
+    const role = isProvider ? "provider" : "user";
+    localStorage.setItem("user", JSON.stringify({ name: formData.name, email: formData.email, role }));
+    window.dispatchEvent(new Event("auth-change"));
     toast({ title: "Account created", description: "Welcome to ServiceHub!" });
-    setLocation("/login");
+    setLocation("/");
   };
 
   return (

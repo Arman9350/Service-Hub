@@ -14,9 +14,10 @@ export default function Login() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login logic, since useLoginUser might not be exposed properly
     if (email && password) {
-      localStorage.setItem("user", JSON.stringify({ email, role: "user" }));
+      const role = email === "admin@servicehub.com" ? "admin" : "user";
+      localStorage.setItem("user", JSON.stringify({ email, role }));
+      window.dispatchEvent(new Event("auth-change"));
       toast({ title: "Logged in successfully" });
       setLocation("/");
     }
