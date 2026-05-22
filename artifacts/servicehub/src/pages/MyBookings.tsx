@@ -1,10 +1,24 @@
-import { useListBookings } from "@workspace/api-client-react";
+import { useState } from "react";
+import { useListBookings, useUpdateBookingStatus, getListBookingsQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarCheck, MapPin, Clock, Wrench } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { CalendarCheck, MapPin, Clock, Wrench, XCircle } from "lucide-react";
 import { Link } from "wouter";
 
 const statusColor: Record<string, string> = {
@@ -15,11 +29,35 @@ const statusColor: Record<string, string> = {
 };
 
 export default function MyBookings() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { data: bookings, isLoading } = useListBookings();
+  const cancelMutation = useUpdateBookingStatus();
+  const [confirmId, setConfirmId] = useState<number | null>(null);
 
   const user = (() => {
     try { return JSON.parse(localStorage.getItem("user") ?? "null"); } catch { return null; }
   })();
+
+  const handleCancel = () => {
+    if (confirmId === null) return;
+    cancelMutation.mutate(
+      { id: confirmId, data: { status: "cancelled" } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
+          toast({ title: "Booking cancelled", description: `Booking #${confirmId} has been cancelled.` });
+          setConfirmId(null);
+        },
+        onError: () => {
+          toast({ title: "Failed to cancel", description: "Please try again.", variant: "destructive" });
+          setConfirmId(null);
+        },
+      }
+    );
+  };
+
+  const cancellable = (status: string) => status === "pending" || status === "confirmed";
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -85,7 +123,8 @@ export default function MyBookings() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+
+                      <div className="flex flex-col items-end gap-3 flex-shrink-0">
                         <Badge
                           variant="outline"
                           className={`capitalize text-sm px-3 py-1 ${statusColor[booking.status] ?? "bg-slate-50 text-slate-600"}`}
@@ -97,6 +136,17 @@ export default function MyBookings() {
                             ₹{booking.totalAmount}
                           </span>
                         )}
+                        {cancellable(booking.status) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 gap-1.5"
+                            onClick={() => setConfirmId(booking.id)}
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Cancel Booking
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -107,6 +157,27 @@ export default function MyBookings() {
         </div>
       </main>
       <Footer />
+
+      <AlertDialog open={confirmId !== null} onOpenChange={(open) => { if (!open) setConfirmId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Booking #{confirmId}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will cancel your booking. The service provider will be notified. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleCancel}
+              disabled={cancelMutation.isPending}
+            >
+              {cancelMutation.isPending ? "Cancelling…" : "Yes, Cancel"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
