@@ -22,25 +22,25 @@ export default function Earnings() {
           <Card className="bg-white border-slate-200">
             <CardContent className="p-6 flex flex-col justify-center">
               <p className="text-sm font-medium text-slate-500 mb-2">Today's Earnings</p>
-              <h3 className="text-3xl font-bold text-slate-900">${summary.today}</h3>
+              <h3 className="text-3xl font-bold text-slate-900">₹{summary.today}</h3>
             </CardContent>
           </Card>
           <Card className="bg-white border-slate-200">
             <CardContent className="p-6 flex flex-col justify-center">
               <p className="text-sm font-medium text-slate-500 mb-2">This Week</p>
-              <h3 className="text-3xl font-bold text-slate-900">${summary.thisWeek}</h3>
+              <h3 className="text-3xl font-bold text-slate-900">₹{summary.thisWeek}</h3>
             </CardContent>
           </Card>
           <Card className="bg-white border-slate-200">
             <CardContent className="p-6 flex flex-col justify-center">
               <p className="text-sm font-medium text-slate-500 mb-2">This Month</p>
-              <h3 className="text-3xl font-bold text-slate-900">${summary.thisMonth}</h3>
+              <h3 className="text-3xl font-bold text-slate-900">₹{summary.thisMonth}</h3>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-primary to-primary/80 border-none text-white">
             <CardContent className="p-6 flex flex-col justify-center h-full">
               <p className="text-sm font-medium text-primary-foreground/80 mb-2">Total Earnings</p>
-              <h3 className="text-3xl font-bold">${summary.total}</h3>
+              <h3 className="text-3xl font-bold">₹{summary.total}</h3>
             </CardContent>
           </Card>
         </div>
@@ -71,7 +71,7 @@ export default function Earnings() {
                         {entry.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-bold text-slate-900">${entry.amount}</TableCell>
+                    <TableCell className="text-right font-bold text-slate-900">₹{entry.amount}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

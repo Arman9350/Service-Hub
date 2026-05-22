@@ -71,7 +71,7 @@ export default function Providers() {
                             <MapPin className="w-4 h-4 mr-2" />
                             {provider.distanceKm ? `${provider.distanceKm.toFixed(1)} km` : 'Local'}
                           </div>
-                          <span className="font-semibold text-slate-900">${provider.pricePerHour}/hr</span>
+                          <span className="font-semibold text-slate-900">₹{provider.pricePerHour}/hr</span>
                         </div>
                       </div>
                     </CardContent>

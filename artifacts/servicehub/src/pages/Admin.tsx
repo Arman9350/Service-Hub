@@ -101,7 +101,7 @@ export default function Admin() {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-sm font-medium text-slate-500 mb-1">Revenue</p>
-                        <h3 className="text-3xl font-bold text-slate-900">${mockStats.totalRevenue}</h3>
+                        <h3 className="text-3xl font-bold text-slate-900">₹{mockStats.totalRevenue}</h3>
                       </div>
                       <div className="p-2 bg-amber-50 rounded-lg text-amber-500"><TrendingUp className="w-5 h-5" /></div>
                     </div>

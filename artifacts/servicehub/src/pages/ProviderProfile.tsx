@@ -123,7 +123,7 @@ export default function ProviderProfile() {
                           <Textarea name="description" required placeholder="Describe what you need help with..." />
                         </div>
                         <Button type="submit" className="w-full mt-4" disabled={createBooking.isPending}>
-                          {createBooking.isPending ? "Confirming..." : `Confirm Booking • $${provider.pricePerHour}/hr`}
+                          {createBooking.isPending ? "Confirming..." : `Confirm Booking • ₹${provider.pricePerHour}/hr`}
                         </Button>
                       </form>
                     </DialogContent>
@@ -141,7 +141,7 @@ export default function ProviderProfile() {
                     {provider.city} {provider.distanceKm && `• ${provider.distanceKm}km away`}
                   </div>
                   <div className="flex items-center font-medium text-slate-900">
-                    ${provider.pricePerHour} / hour
+                    ₹{provider.pricePerHour} / hour
                   </div>
                 </div>
 
