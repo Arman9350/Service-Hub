@@ -15,6 +15,8 @@ import Notifications from "./pages/Notifications";
 import Earnings from "./pages/Earnings";
 import Tracking from "./pages/Tracking";
 import MyBookings from "./pages/MyBookings";
+import ProviderDashboard from "./pages/ProviderDashboard";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +41,8 @@ function Router() {
       <Route path="/earnings" component={Earnings} />
       <Route path="/tracking" component={Tracking} />
       <Route path="/bookings" component={MyBookings} />
+      <Route path="/provider-dashboard" component={ProviderDashboard} />
+      <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );
