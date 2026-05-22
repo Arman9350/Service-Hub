@@ -14,6 +14,7 @@ import Admin from "./pages/Admin";
 import Notifications from "./pages/Notifications";
 import Earnings from "./pages/Earnings";
 import Tracking from "./pages/Tracking";
+import MyBookings from "./pages/MyBookings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/notifications" component={Notifications} />
       <Route path="/earnings" component={Earnings} />
       <Route path="/tracking" component={Tracking} />
+      <Route path="/bookings" component={MyBookings} />
       <Route component={NotFound} />
     </Switch>
   );
