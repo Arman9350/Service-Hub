@@ -116,7 +116,7 @@ export default function ProviderProfile() {
                         </div>
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Phone Number</label>
-                          <Input name="phone" required placeholder="+1 234 567 8900" />
+                          <Input name="phone" required placeholder="+91 98765 43210" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Task Description</label>

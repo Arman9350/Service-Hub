@@ -1,26 +1,42 @@
-import { Link } from "wouter";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Wrench, Zap, Hammer, Wind, BookOpen, Car, Scissors, Package, Briefcase } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
 export default function Home() {
+  const [, setLocation] = useLocation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("Delhi, India");
+
   const categories = [
-    { icon: <Zap className="h-6 w-6" />, name: "Electrician" },
-    { icon: <Wrench className="h-6 w-6" />, name: "Plumber" },
-    { icon: <Hammer className="h-6 w-6" />, name: "Carpenter" },
-    { icon: <Wind className="h-6 w-6" />, name: "AC Repair" },
-    { icon: <BookOpen className="h-6 w-6" />, name: "Tutor" },
-    { icon: <Car className="h-6 w-6" />, name: "Mechanic" },
-    { icon: <Scissors className="h-6 w-6" />, name: "Beautician" },
-    { icon: <Package className="h-6 w-6" />, name: "Delivery" },
-    { icon: <Briefcase className="h-6 w-6" />, name: "Freelancer" },
+    { icon: <Zap className="h-6 w-6" />, name: "Electrician", value: "electrician" },
+    { icon: <Wrench className="h-6 w-6" />, name: "Plumber", value: "plumber" },
+    { icon: <Hammer className="h-6 w-6" />, name: "Carpenter", value: "carpenter" },
+    { icon: <Wind className="h-6 w-6" />, name: "AC Repair", value: "ac_repair" },
+    { icon: <BookOpen className="h-6 w-6" />, name: "Tutor", value: "tutor" },
+    { icon: <Car className="h-6 w-6" />, name: "Mechanic", value: "mechanic" },
+    { icon: <Scissors className="h-6 w-6" />, name: "Beautician", value: "beautician" },
+    { icon: <Package className="h-6 w-6" />, name: "Delivery", value: "delivery" },
+    { icon: <Briefcase className="h-6 w-6" />, name: "Freelancer", value: "freelancer" },
   ];
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    if (locationQuery.trim()) params.set("location", locationQuery.trim());
+    setLocation(`/providers?${params.toString()}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleSearch();
+  };
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
       <Navbar />
-      
+
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="bg-primary/10 pt-20 pb-28 px-4">
@@ -31,26 +47,31 @@ export default function Home() {
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
               ServiceHub is the neighborhood notice board gone digital. Warm, trustworthy, and immediate.
             </p>
-            
+
             <div className="bg-white p-2 rounded-2xl shadow-lg max-w-3xl mx-auto flex flex-col md:flex-row gap-2 mt-10">
               <div className="flex items-center flex-1 bg-slate-50 rounded-xl px-4 py-3">
-                <MapPin className="h-5 w-5 text-slate-400 mr-2" />
-                <input 
-                  type="text" 
-                  placeholder="Delhi / Mumbai" 
+                <MapPin className="h-5 w-5 text-slate-400 mr-2 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Delhi / Mumbai"
                   className="bg-transparent border-none outline-none w-full text-slate-700"
-                  defaultValue="Delhi, India"
+                  value={locationQuery}
+                  onChange={(e) => setLocationQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
               <div className="flex items-center flex-[2] bg-slate-50 rounded-xl px-4 py-3">
-                <Search className="h-5 w-5 text-slate-400 mr-2" />
-                <input 
-                  type="text" 
-                  placeholder="What service do you need?" 
+                <Search className="h-5 w-5 text-slate-400 mr-2 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="What service do you need?"
                   className="bg-transparent border-none outline-none w-full text-slate-700"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
-              <Button size="lg" className="h-12 px-8 rounded-xl text-base">
+              <Button size="lg" className="h-12 px-8 rounded-xl text-base" onClick={handleSearch}>
                 Find Near Me
               </Button>
             </div>
@@ -61,27 +82,30 @@ export default function Home() {
         <section className="py-20 px-4 bg-white">
           <div className="container mx-auto max-w-5xl">
             <h2 className="text-2xl font-bold text-slate-900 mb-10 text-center">Browse Categories</h2>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {categories.map((cat, i) => (
-                <Link key={i} href="/providers">
-                  <div className="flex flex-col items-center p-6 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer group">
-                    <div className="h-14 w-14 rounded-full bg-white flex items-center justify-center text-primary mb-4 shadow-sm group-hover:scale-110 transition-transform">
-                      {cat.icon}
-                    </div>
-                    <span className="font-medium text-slate-700 group-hover:text-primary transition-colors">{cat.name}</span>
+              {categories.map((cat) => (
+                <div
+                  key={cat.value}
+                  onClick={() => setLocation(`/providers?category=${cat.value}`)}
+                  className="flex flex-col items-center p-6 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer group"
+                >
+                  <div className="h-14 w-14 rounded-full bg-white flex items-center justify-center text-primary mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                    {cat.icon}
                   </div>
-                </Link>
-              ))}
-              <Link href="/providers">
-                <div className="flex flex-col items-center p-6 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer group h-full justify-center">
-                  <span className="font-medium text-slate-700 group-hover:text-primary transition-colors">View All &rarr;</span>
+                  <span className="font-medium text-slate-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
                 </div>
-              </Link>
+              ))}
+              <div
+                onClick={() => setLocation("/providers")}
+                className="flex flex-col items-center p-6 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer group h-full justify-center"
+              >
+                <span className="font-medium text-slate-700 group-hover:text-primary transition-colors">View All &rarr;</span>
+              </div>
             </div>
           </div>
         </section>
-        
+
         {/* Value Prop Section */}
         <section className="py-24 px-4 bg-slate-900 text-white">
           <div className="container mx-auto max-w-4xl text-center space-y-6">
@@ -112,7 +136,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      
+
       <Footer />
     </div>
   );

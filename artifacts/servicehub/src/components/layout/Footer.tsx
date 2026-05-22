@@ -1,6 +1,18 @@
 import { Link } from "wouter";
 import { Wrench } from "lucide-react";
 
+const SERVICE_CATEGORIES = [
+  { label: "Electrician", value: "electrician" },
+  { label: "Plumber", value: "plumber" },
+  { label: "Carpenter", value: "carpenter" },
+  { label: "AC Repair", value: "ac_repair" },
+  { label: "Tutor", value: "tutor" },
+  { label: "Mechanic", value: "mechanic" },
+  { label: "Beautician", value: "beautician" },
+  { label: "Delivery", value: "delivery" },
+  { label: "Freelancer", value: "freelancer" },
+];
+
 export default function Footer() {
   return (
     <footer className="bg-slate-900 text-slate-300 py-12 px-4">
@@ -22,6 +34,7 @@ export default function Footer() {
             <h4 className="font-semibold text-white mb-3 text-sm uppercase tracking-wider">Quick Links</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="/providers"><span className="hover:text-primary transition-colors cursor-pointer">Find Services</span></Link></li>
+              <li><Link href="/bookings"><span className="hover:text-primary transition-colors cursor-pointer">My Bookings</span></Link></li>
               <li><Link href="/login"><span className="hover:text-primary transition-colors cursor-pointer">Login</span></Link></li>
               <li><Link href="/register"><span className="hover:text-primary transition-colors cursor-pointer">Register</span></Link></li>
               <li><Link href="/admin"><span className="hover:text-primary transition-colors cursor-pointer">Admin Dashboard</span></Link></li>
@@ -31,10 +44,10 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-3 text-sm uppercase tracking-wider">Services</h4>
             <ul className="space-y-2 text-sm">
-              {["Electrician", "Plumber", "Carpenter", "AC Repair", "Tutor", "Mechanic"].map((s) => (
-                <li key={s}>
-                  <Link href="/providers">
-                    <span className="hover:text-primary transition-colors cursor-pointer">{s}</span>
+              {SERVICE_CATEGORIES.map((s) => (
+                <li key={s.value}>
+                  <Link href={`/providers?category=${s.value}`}>
+                    <span className="hover:text-primary transition-colors cursor-pointer">{s.label}</span>
                   </Link>
                 </li>
               ))}

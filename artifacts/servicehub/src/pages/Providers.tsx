@@ -1,23 +1,55 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useState, useEffect } from "react";
+import { Link, useSearch } from "wouter";
 import { useListProviders, getListProvidersQueryKey } from "@workspace/api-client-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Star, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Star, MapPin, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const CATEGORIES = [
+  { value: "all", label: "All Categories" },
+  { value: "electrician", label: "Electrician" },
+  { value: "plumber", label: "Plumber" },
+  { value: "carpenter", label: "Carpenter" },
+  { value: "ac_repair", label: "AC Repair" },
+  { value: "tutor", label: "Tutor" },
+  { value: "mechanic", label: "Mechanic" },
+  { value: "beautician", label: "Beautician" },
+  { value: "delivery", label: "Delivery" },
+  { value: "freelancer", label: "Freelancer" },
+];
+
 export default function Providers() {
-  const [category, setCategory] = useState<string>("all");
-  const [minRating, setMinRating] = useState([3]);
+  const searchString = useSearch();
+  const params = new URLSearchParams(searchString);
+
+  const [category, setCategory] = useState<string>(params.get("category") ?? "all");
+  const [search, setSearch] = useState<string>(params.get("search") ?? "");
+  const [minRating, setMinRating] = useState(0);
+
+  useEffect(() => {
+    const p = new URLSearchParams(searchString);
+    const cat = p.get("category");
+    const q = p.get("search");
+    if (cat) setCategory(cat);
+    if (q) setSearch(q);
+  }, [searchString]);
 
   const { data: providers, isLoading } = useListProviders(
-    { category: category === "all" ? undefined : category, minRating: minRating[0] },
-    { query: { queryKey: getListProvidersQueryKey({ category: category === "all" ? undefined : category, minRating: minRating[0] }) } }
+    { category: category === "all" ? undefined : category },
+    { query: { queryKey: getListProvidersQueryKey({ category: category === "all" ? undefined : category }) } }
   );
+
+  const filtered = (providers ?? []).filter((p) => {
+    const q = search.toLowerCase();
+    const matchesSearch = !q || p.name.toLowerCase().includes(q) || p.serviceType.toLowerCase().includes(q);
+    const matchesRating = p.rating >= minRating;
+    return matchesSearch && matchesRating;
+  });
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -26,16 +58,41 @@ export default function Providers() {
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <h1 className="text-3xl font-bold text-slate-900">Find a Professional</h1>
-            <div className="flex gap-4 w-full md:w-auto">
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  className="pl-9 w-full sm:w-56 bg-white"
+                  placeholder="Search providers..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+
+              {/* Category */}
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-[180px] bg-white">
+                <SelectTrigger className="w-full sm:w-[180px] bg-white">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="electrician">Electrician</SelectItem>
-                  <SelectItem value="plumber">Plumber</SelectItem>
-                  <SelectItem value="carpenter">Carpenter</SelectItem>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Min Rating */}
+              <Select value={String(minRating)} onValueChange={(v) => setMinRating(Number(v))}>
+                <SelectTrigger className="w-full sm:w-[160px] bg-white">
+                  <SelectValue placeholder="Min Rating" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Any Rating</SelectItem>
+                  <SelectItem value="3">3+ Stars</SelectItem>
+                  <SelectItem value="4">4+ Stars</SelectItem>
+                  <SelectItem value="4.5">4.5+ Stars</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -49,14 +106,14 @@ export default function Providers() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {providers?.map((provider) => (
+              {filtered.map((provider) => (
                 <Link key={provider.id} href={`/providers/${provider.id}`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer border-slate-200 overflow-hidden group h-full">
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <h3 className="font-bold text-lg text-slate-900 group-hover:text-primary transition-colors">{provider.name}</h3>
-                          <p className="text-slate-500 capitalize">{provider.serviceType.replace('_', ' ')}</p>
+                          <p className="text-slate-500 capitalize">{provider.serviceType.replace(/_/g, ' ')}</p>
                         </div>
                         {provider.available && <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">Available</Badge>}
                       </div>
@@ -78,7 +135,7 @@ export default function Providers() {
                   </Card>
                 </Link>
               ))}
-              {providers?.length === 0 && (
+              {filtered.length === 0 && (
                 <div className="col-span-full text-center py-20 text-slate-500">
                   No providers found matching your criteria.
                 </div>
